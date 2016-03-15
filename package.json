@@ -1,0 +1,19 @@
+{
+  "name": "promise-flow-control",
+  "version": "1.0.0",
+  "description": "async.auto for promises",
+  "main": "PromiseFlowControl.js",
+  "dependencies": {
+    "bluebird": "^3.2.1",
+    "lodash": "^4.2.1"
+  },
+  "devDependencies": {
+    "autodoc": "^0.6.3"
+  },
+  "scripts": {
+    "test": "autodoc --test --handlers autodoc-helpers/autodoc-helpers.js --partials ./autodoc-helpers --verbose ./PromiseFlowControl.js",
+    "docs": "autodoc --handlers ./autodoc-helpers/autodoc-helpers.js --partials ./autodoc-helpers ./PromiseFlowControl.js"
+  },
+  "author": "Jesse Desaever",
+  "license": "ISC"
+}
