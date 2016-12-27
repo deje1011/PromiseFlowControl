@@ -4,8 +4,16 @@ var Promise = require('bluebird');
 var _ = require('lodash');
 
 /*
-    TODO: Dependency Errors entweder mit throw werfen oder console.error zusätzlich (vllt mit debugMode === true?)
+    Things to create issues for: https://github.com/dtao/autodoc/issues
+    * Wrong Line Number when test fails + no error message 
+        https://github.com/dtao/autodoc/issues/57
+    * No indentation 
+        https://github.com/dtao/autodoc/issues/56
+    * How to handle the promise.reject case properly
+        https://github.com/dtao/autodoc/issues/58
 */
+
+
 
 var PFCError = function (error, data) {
     return {
@@ -36,7 +44,8 @@ var PFC = {
 
 
 /**
-    @public 
+    @param {Object} flowConfig An object containing functions and their dependencies.
+    @returns {Promise} Promise that resolves in an object containing all results.
     @examples
     
     // Setup

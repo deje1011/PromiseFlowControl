@@ -1,10 +1,11 @@
 {
   "name": "promise-flow-control",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "async.auto for promises",
   "main": "PromiseFlowControl.js",
   "dependencies": {
     "bluebird": "^3.2.1",
+    "describefn": "^1.0.0",
     "lodash": "^4.2.1"
   },
   "devDependencies": {
