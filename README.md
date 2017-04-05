@@ -1,7 +1,7 @@
 # PromiseFlowControl
 async.auto (http://caolan.github.io/async/docs.html#auto) for promises 
 
-#Example 
+# Example 
 
     PFC.props({
 
