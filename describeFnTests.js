@@ -120,6 +120,25 @@ describeFn({
                 isError: true,
                 contains: {code: PFC.ERRORS.CYCLIC_DEPENDENCIES.code}
             }
+        },
+        
+        'does not call functions more than once if they are required multiple times': {
+            params: {
+                getCounter: (function () {
+                    var counter = {
+                        value: 0
+                    };
+                    return function () {
+                        counter.value++;
+                        return counter;
+                    };
+                }()),
+                getCounterOnce: ['getCounter', function () {}],
+                getCounterTwice: ['getCounter', function () {}]
+            },
+            result: {
+                contains: {getCounter: {value: 1}}
+            }
         }
     }
 }).then(function (results) {

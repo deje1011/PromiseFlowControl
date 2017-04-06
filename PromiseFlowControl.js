@@ -104,6 +104,9 @@ function props (flowConfig) {
     // return "undefined", which we can not differenciate from an unmet dependency.
     var identifierHasBeenResolvedStore = {};
     var identifierToResultsStore = {};
+    
+    // Prevent calling a function twice: 
+    var identifiedToPromiseStore = {};
 
     var mapIdentifiersToResults = function (identifiers) {
         return _.reduce(identifiers, function (results, identifier) {
@@ -165,8 +168,12 @@ function props (flowConfig) {
 
             // Reducing ["depA", "depB] => {depA : resultOfDepA, debB : resultOfDepB}
             var resultsParam = mapIdentifiersToResults(dependencies);
+            
+            // Prevent calling functions twice
+            var resultPromise =  identifiedToPromiseStore[identifier] || Promise.resolve(fn(resultsParam));
+            identifiedToPromiseStore[identifier] = resultPromise;
 
-            return Promise.resolve(fn(resultsParam)).then(function (result) {
+            return resultPromise.then(function (result) {
 
                 // Save result for other functions that have this function as a dependency
                 identifierToResultsStore[identifier] = result;
