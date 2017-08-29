@@ -97,7 +97,8 @@ var PFC = {
     PFC.props(flowConfigNonExistentDep).catch(extractErrorCode) // rejects with nonExistentDep_errorCode
     PFC.props(flowConfigCyclicDeps).catch(extractErrorCode) // rejects with cyclicDeps_errorCode
 */
-function props (flowConfig) {
+function props (flowConfig, concurrency) {
+    concurrency = _.isInteger(concurrency) && concurrency > 0 ? concurrency : Infinity;
 
 
     // We need to have two different stores here because one of the functions could 
@@ -197,7 +198,7 @@ function props (flowConfig) {
                 return processTask(flowConfig[dependencyIdentifier], dependencyIdentifier);
             };
 
-            return Promise.map(unresolvedDependencies, processTaskForIdentifier).then(function() {
+            return Promise.map(unresolvedDependencies, processTaskForIdentifier, { concurrency: concurrency }).then(function() {
                 // After our unmet dependencies are resolved, we  just call process task again
                 // This time it will return the result from (*1*)
                 return processTask(fnOrArray, identifier);
@@ -209,8 +210,8 @@ function props (flowConfig) {
     var allIdentifierParams = _.keys(flowConfig);
 
     return Promise.map(allIdentifierParams, function (identifier) {
-        return processTask(flowConfig[identifier], identifier); 
-    }).then(function () {
+        return processTask(flowConfig[identifier], identifier);
+    }, { concurrency: concurrency }).then(function () {
         return mapIdentifiersToResults(allIdentifierParams);
     });
 
