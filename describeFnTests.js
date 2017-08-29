@@ -129,7 +129,7 @@ describeFn({
                         value: 0
                     };
                     return function () {
-                        counter.value++;
+                        counter.value += 1;
                         return counter;
                     };
                 }()),
@@ -138,6 +138,28 @@ describeFn({
             },
             result: {
                 contains: {getCounter: {value: 1}}
+            }
+        },
+        
+        'does not call functions more than ones if they throw an error': {
+            params: {
+                howOftenWasIncrementCalled: () => {
+                    var counter = {value: 0};
+                    return PFC
+                        .props({
+                            somethingForIncrementToRequire: () => {},
+                            increment: ['somethingForIncrementToRequire', () => {
+                                counter.value += 1;
+                                throw new Error('Inner map error');
+                            }],
+                            requireIncrement: ['increment', function () {}],
+                        })
+                        .catch(() => {})
+                        .then(() => counter.value);
+                }
+            },
+            result: {
+                contains: {howOftenWasIncrementCalled: 1}
             }
         }
     }

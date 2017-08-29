@@ -106,7 +106,7 @@ function props (flowConfig) {
     var identifierToResultsStore = {};
     
     // Prevent calling a function twice: 
-    var identifiedToPromiseStore = {};
+    var identifierToPromiseStore = {};
 
     var mapIdentifiersToResults = function (identifiers) {
         return _.reduce(identifiers, function (results, identifier) {
@@ -130,9 +130,7 @@ function props (flowConfig) {
         // That way you can pass in something like {foo : 'bar'}
         if (_.isFunction(fn) === false) {
             var syncPropResult = fn;
-            fn = function () {
-                return syncPropResult;
-            };
+            fn = _.constant(syncPropResult);
         }
 
 
@@ -156,7 +154,7 @@ function props (flowConfig) {
         }
 
 
-        // every also returns true for empty arrays, so we are save here 
+        // _.every also returns true for empty arrays, so we are save here 
         var allDependenciesAreResolved = _.every(dependencies, function (dependencyIdentifier) {
             return identifierHasBeenResolvedStore[dependencyIdentifier] === true;
         });
@@ -170,8 +168,8 @@ function props (flowConfig) {
             var resultsParam = mapIdentifiersToResults(dependencies);
             
             // Prevent calling functions twice
-            var resultPromise =  identifiedToPromiseStore[identifier] || Promise.resolve(fn(resultsParam));
-            identifiedToPromiseStore[identifier] = resultPromise;
+            var resultPromise = identifierToPromiseStore[identifier] || Promise.try(() => fn(resultsParam));
+            identifierToPromiseStore[identifier] = resultPromise;
 
             return resultPromise.then(function (result) {
 

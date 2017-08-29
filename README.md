@@ -1,5 +1,8 @@
 # PromiseFlowControl
-async.auto (http://caolan.github.io/async/docs.html#auto) for promises 
+async.auto for (bluebird) promises.
+
+http://caolan.github.io/async/docs.html#auto
+http://bluebirdjs.com/
 
 # Example 
 
@@ -23,7 +26,7 @@ async.auto (http://caolan.github.io/async/docs.html#auto) for promises
 
 
     }).then(function (results) {
-      console.log(results); // {syncFn: 'sync fn', asyncFn: 'async fn', fnWithDeps: 'sync fn + async fn'}
+        console.log(results); // {syncFn: 'sync fn', asyncFn: 'async fn', fnWithDeps: 'sync fn + async fn'}
     });
 
 For more examples, see examples.js
