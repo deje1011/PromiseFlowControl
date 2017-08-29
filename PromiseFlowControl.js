@@ -168,7 +168,9 @@ function props (flowConfig) {
             var resultsParam = mapIdentifiersToResults(dependencies);
             
             // Prevent calling functions twice
-            var resultPromise = identifierToPromiseStore[identifier] || Promise.try(() => fn(resultsParam));
+            var resultPromise = identifierToPromiseStore[identifier] || Promise.try(function () {
+                return fn(resultsParam);
+            });
             identifierToPromiseStore[identifier] = resultPromise;
 
             return resultPromise.then(function (result) {

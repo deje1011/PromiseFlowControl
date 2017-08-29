@@ -1,5 +1,6 @@
 var describeFn = require('describefn');
 var PFC = require('./PromiseFlowControl');
+var _ = require('lodash');
 
 describeFn({
     fn: PFC.props,
@@ -143,19 +144,21 @@ describeFn({
         
         'does not call functions more than ones if they throw an error': {
             params: {
-                howOftenWasIncrementCalled: () => {
+                howOftenWasIncrementCalled: function () {
                     var counter = {value: 0};
                     return PFC
                         .props({
-                            somethingForIncrementToRequire: () => {},
-                            increment: ['somethingForIncrementToRequire', () => {
+                            somethingForIncrementToRequire: _.noop,
+                            increment: ['somethingForIncrementToRequire', function () {
                                 counter.value += 1;
                                 throw new Error('Inner map error');
                             }],
-                            requireIncrement: ['increment', function () {}],
+                            requireIncrement: ['increment', _.noop],
                         })
-                        .catch(() => {})
-                        .then(() => counter.value);
+                        .catch(_.noop)
+                        .then(function () {
+                            return counter.value
+                        });
                 }
             },
             result: {
