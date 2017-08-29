@@ -1,6 +1,44 @@
 var describeFn = require('describefn');
+var Promise = require('bluebird');
 var PFC = require('./PromiseFlowControl');
 var _ = require('lodash');
+
+
+var generateConcurrencyTest = function (CONCURRENCY) {
+    var numberOfRunningFunctions = 0;
+    var requestFunctionRun = function () {
+        if (numberOfRunningFunctions >= CONCURRENCY) {
+            throw new Error('Concurrency is set to ' + CONCURRENCY + ' but more functions are running');
+        }
+        numberOfRunningFunctions += 1;
+    };
+    var releaseFunctionRun = function () {
+        numberOfRunningFunctions -= 1;
+    };
+    return {
+        params: [{
+            first: function () {
+                requestFunctionRun();
+                return Promise.delay(10).then(releaseFunctionRun);
+            },
+            second: function () {
+                requestFunctionRun();
+                return Promise.delay(20).then(releaseFunctionRun);
+            },
+            third: ['first', function () {
+                requestFunctionRun();
+                return Promise.delay(10).then(releaseFunctionRun);
+            }],
+            fourth: ['first', function () {
+                requestFunctionRun();
+                return Promise.delay(20).then(releaseFunctionRun);
+            }],
+        }, CONCURRENCY],
+        result: {
+            isError: false
+        }
+    };
+};
 
 describeFn({
     fn: PFC.props,
@@ -164,7 +202,10 @@ describeFn({
             result: {
                 contains: {howOftenWasIncrementCalled: 1}
             }
-        }
+        },
+        
+        'can restrict how many functions run at the same time to 1': generateConcurrencyTest(1),
+        'can restrict how many functions run at the same time to 2': generateConcurrencyTest(2)
     }
 }).then(function (results) {
     console.log(JSON.stringify(results, null, 2));

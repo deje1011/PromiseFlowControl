@@ -1,6 +1,6 @@
 {
   "name": "promise-flow-control",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "async.auto for promises",
   "main": "PromiseFlowControl.js",
   "dependencies": {
@@ -12,7 +12,7 @@
     "autodoc": "^0.6.3"
   },
   "scripts": {
-    "test": "autodoc --test --handlers autodoc-helpers/autodoc-helpers.js --partials ./autodoc-helpers --verbose ./PromiseFlowControl.js",
+    "test": "node describeFnTests.js",
     "docs": "autodoc --handlers ./autodoc-helpers/autodoc-helpers.js --partials ./autodoc-helpers ./PromiseFlowControl.js"
   },
   "author": "Jesse Desaever",
