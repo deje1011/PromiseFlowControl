@@ -1,6 +1,6 @@
 {
   "name": "promise-flow-control",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "async.auto for promises",
   "main": "PromiseFlowControl.js",
   "dependencies": {
