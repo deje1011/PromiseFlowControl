@@ -3,18 +3,6 @@
 var Promise = require('bluebird');
 var _ = require('lodash');
 
-/*
-    Things to create issues for: https://github.com/dtao/autodoc/issues
-    * Wrong Line Number when test fails + no error message 
-        https://github.com/dtao/autodoc/issues/57
-    * No indentation 
-        https://github.com/dtao/autodoc/issues/56
-    * How to handle the promise.reject case properly
-        https://github.com/dtao/autodoc/issues/58
-*/
-
-
-
 var PFCError = function (error, data) {
     return {
         code : error.code,
@@ -42,60 +30,9 @@ var PFC = {
     props : props
 };
 
-
 /**
     @param {Object} flowConfig An object containing functions and their dependencies.
     @returns {Promise} Promise that resolves in an object containing all results.
-    @examples
-    
-    // Setup
-    var extractErrorCode = function(e) { return Promise.reject(e.code) };
-    
-    
-    // Test 1 "Success"
-    var flowConfigSuccess = {
-        syncProp : 'sync prop',
-        syncFn : function () {
-            return 'sync fn';
-        },
-        asyncFn : function () {
-            return new Promise(function (resolve, reject) {
-                setTimeout(function () {
-                    resolve('async fn');
-                }, 1);
-            });
-        },
-        dependencyFn: ['syncFn', 'asyncFn', function (results) {
-            return results.syncFn + ' - ' + results.asyncFn;
-        }]
-    };
-    
-    var expectedResult = {
-        syncProp : 'sync prop',
-        syncFn : 'sync fn',
-        asyncFn : 'async fn',
-        dependencyFn : 'sync fn - async fn'
-    };
-    
-    // Test 2 "Non existent dependencies"
-    var flowConfigNonExistentDep = {
-        a : ['b', function () {}]
-    };
-    var nonExistentDep_errorCode = PFC.ERRORS.NON_EXISTENT_DEPENDENCIES.code;
-    
-    
-    // Test 3 "cyclic dependencies"
-    var flowConfigCyclicDeps = {
-        a : ['b', function () {}],
-        b : ['a', function () {}]
-    };
-    var cyclicDeps_errorCode = PFC.ERRORS.CYCLIC_DEPENDENCIES.code;
-    
-    
-    // Run tests
-    PFC.props(flowConfigSuccess) // resolves in expectedResult
-    PFC.props(flowConfigNonExistentDep).catch(extractErrorCode) // rejects with nonExistentDep_errorCode
-    PFC.props(flowConfigCyclicDeps).catch(extractErrorCode) // rejects with cyclicDeps_errorCode
 */
 function props (flowConfig, concurrency) {
     
