@@ -5,11 +5,11 @@
   "main": "PromiseFlowControl.js",
   "dependencies": {
     "bluebird": "^3.2.1",
-    "describefn": "^1.0.0",
     "lodash": "^4.2.1"
   },
   "devDependencies": {
-    "autodoc": "^0.6.3"
+    "autodoc": "^0.6.3",
+    "describefn": "^1.0.0"
   },
   "scripts": {
     "test": "node describeFnTests.js",
