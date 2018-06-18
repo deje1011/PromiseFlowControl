@@ -5,29 +5,29 @@ var _ = require('lodash');
 
 var PFCError = function (error, data) {
     return {
-        code : error.code,
-        name : 'PFC Error: ' + error.name,
-        message : error.message || error.name,
-        data : data
+        code: error.code,
+        name: 'PFC Error: ' + error.name,
+        message: error.message || error.name,
+        data: data
     };
 };  
 
 var PFC = {
 
-    ERRORS : {
-        NON_EXISTENT_DEPENDENCIES : {
-            code : 0,
-            name : 'Non existent dependencies',
-            message : ''
+    ERRORS: {
+        NON_EXISTENT_DEPENDENCIES: {
+            code: 0,
+            name: 'Non existent dependencies',
+            message: ''
         },
-        CYCLIC_DEPENDENCIES : {
-            code : 1,
-            name : 'Cyclic dependencies',
-            message : ''
+        CYCLIC_DEPENDENCIES: {
+            code: 1,
+            name: 'Cyclic dependencies',
+            message: ''
         }
     },
 
-    props : props
+    props: props
 };
 
 /**
@@ -47,7 +47,8 @@ function props (flowConfig, concurrency) {
     // Prevent calling a function twice: 
     var identifierToPromiseStore = {};
 
-    var mapIdentifiersToResults = function (identifiers) {
+    // Reducing ['depA', 'depB'] => {depA: resultOfDepA, debB: resultOfDepB}
+    var getResultsOfDependencies = function (identifiers) {
         return _.reduce(identifiers, function (results, identifier) {
             results[identifier] = identifierToResultsStore[identifier];
             return results;
@@ -56,7 +57,7 @@ function props (flowConfig, concurrency) {
 
     var processTask = function (fnOrArray, identifier) {
 
-        // if we did not get passed an array, make it one
+        // If we did not get passed an array, make it one
         if (_.isArray(fnOrArray) === false) {
             fnOrArray = [fnOrArray];
         }
@@ -68,12 +69,10 @@ function props (flowConfig, concurrency) {
         // If last item in the array is not a function, we treat it as the result of this process
         // That way you can pass in something like {foo : 'bar'}
         if (_.isFunction(fn) === false) {
-            var syncPropResult = fn;
-            fn = _.constant(syncPropResult);
+            fn = _.constant(fn);
         }
 
-
-        // check if all dependencies exist
+        // Check if all dependencies exist
         var nonExistentDependencies = _.filter(dependencies, function (dependencyIdentifier) {
             return flowConfig[dependencyIdentifier] === undefined; 
         });
@@ -92,67 +91,62 @@ function props (flowConfig, concurrency) {
             return Promise.reject(PFCError(PFC.ERRORS.CYCLIC_DEPENDENCIES, cycylicDependencies));
         }
 
-
-        // _.every also returns true for empty arrays, so we are save here 
+        // Note: _.every also returns true for empty arrays
         var allDependenciesAreResolved = _.every(dependencies, function (dependencyIdentifier) {
             return identifierHasBeenResolvedStore[dependencyIdentifier] === true;
         });
 
+        // If there are unresolved dependencies we have to filter out the unmet dependencies 
+        // and resolve them before we can finally call our function
+        if (allDependenciesAreResolved === false) {
+            return Promise
+                .resolve(dependencies)
+                .filter(function (dependencyIdentifier) {
+                    // Don't compare to false here, as the value might be undefined for unseen identifiers
+                    return identifierHasBeenResolvedStore[dependencyIdentifier] !== true;
+                })
+                // Now we have all unresolved dependencies
+                .map(function (dependencyIdentifier) {
+                    return processTask(flowConfig[dependencyIdentifier], dependencyIdentifier);
+                }, {concurrency: concurrency})
+                // Now all dependencies are resolved
+                .then(function() {
+                    // After our dependencies are resolved, we just call processTask again
+                    // This time allDependenciesAreResolved will be true
+                    return processTask(fnOrArray, identifier);
+                });
+        }
+
         // If all dependencies are resolved, we can call the provided function with the resolved 
         // results of the dependencies
-        if (allDependenciesAreResolved === true) {
-            // (*1*) 
-
-            // Reducing ["depA", "depB] => {depA : resultOfDepA, debB : resultOfDepB}
-            var resultsParam = mapIdentifiersToResults(dependencies);
-            
-            // Prevent calling functions twice
-            var resultPromise = identifierToPromiseStore[identifier] || Promise.try(function () {
-                return fn(resultsParam);
-            });
-            identifierToPromiseStore[identifier] = resultPromise;
-
-            return resultPromise.then(function (result) {
-
-                // Save result for other functions that have this function as a dependency
-                identifierToResultsStore[identifier] = result;
-                identifierHasBeenResolvedStore[identifier] = true;
-
-                // Final return
-                // It does not matter what we return here, as the last .then callback in the chain
-                // will get the results from the identifierToResultsStore store.
-                return undefined;
-            });
-        } else {
-
-            // Otherwise we have to filter out the unmet dependencies and resolve them before 
-            // we can finally call our function
-            var unresolvedDependencies = _.filter(dependencies, function (dependencyIdentifier) {
-                // don't compare to false here, as the value might be undefined for unseen identifiers
-                return identifierHasBeenResolvedStore[dependencyIdentifier] !== true;
+        identifierToPromiseStore[identifier] = 
+            identifierToPromiseStore[identifier] || // Prevent calling functions twice by checking for identifierToPromiseStore first
+            Promise.try(function () {
+                return fn(getResultsOfDependencies(dependencies));
             });
 
-            var processTaskForIdentifier = function (dependencyIdentifier) {
-                return processTask(flowConfig[dependencyIdentifier], dependencyIdentifier);
-            };
+        return identifierToPromiseStore[identifier].then(function (result) {
 
-            return Promise.map(unresolvedDependencies, processTaskForIdentifier, {concurrency: concurrency}).then(function() {
-                // After our unmet dependencies are resolved, we  just call process task again
-                // This time it will return the result from (*1*)
-                return processTask(fnOrArray, identifier);
-            });
-        }
+            // Save result for other functions that have this function as a dependency
+            identifierToResultsStore[identifier] = result;
+            identifierHasBeenResolvedStore[identifier] = true;
+
+            // Final return
+            // It does not matter what we return here, as the last .then callback in the chain
+            // will get the results from the identifierToResultsStore store.
+            return undefined;
+        });
 
     };
 
-    var allIdentifierParams = _.keys(flowConfig);
-
-    return Promise.map(allIdentifierParams, function (identifier) {
-        return processTask(flowConfig[identifier], identifier);
-    }, {concurrency: concurrency}).then(function () {
-        return mapIdentifiersToResults(allIdentifierParams);
-    });
-
+    var identifiers = _.keys(flowConfig);
+    return Promise
+        .map(identifiers, function (identifier) {
+            return processTask(flowConfig[identifier], identifier);
+        }, {concurrency: concurrency})
+        .then(function () {
+            return getResultsOfDependencies(identifiers);
+        });
 };
 
 
