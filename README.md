@@ -4,7 +4,7 @@ This library basically provides the same functionality as [async.auto](http://ca
 You can pass functions that should be executed and define dependencies that need to be resolved before execution.
 
 This solves the problem of a promise chain loosing context. Consider the following example:
-```
+```javascript
 getUsers()
     .then(users => {
         const owner = users.find(user => user.isOwner);
@@ -17,12 +17,16 @@ getUsers()
 
 ```
 
-```
+```javascript
 PFC
     .props({
+
         users: () => getUsers(),
+
         owner: ['users', ({users}) => users.find(user => user.isOwner)]
+
         moreInfo: ['owner', ({owner}) => getMoreUserInfo(owner)],
+        
         logUsersAndInfo: ['users', 'moreInfo', ({users, moreInfo}) => {
             console.log(moreInfo);
             console.log(users);
@@ -30,9 +34,11 @@ PFC
     })
 ```
 
-# A more abstract example 
+# Supported values
 
-```
+You can pass values, functions that return synchronously and functions that return promises.
+
+```javascript
 PFC
     .props({
 
@@ -54,13 +60,20 @@ PFC
             return results.syncFn + ' + ' + results.asyncFn;
         }]
 
-
     })
     .then(function (results) {
         console.log(results); // {syncValue: 'sync value', syncFn: 'sync fn', asyncFn: 'async fn', fnWithDependencies: 'sync fn + async fn'}
     });
 ```
 
+# Concurrency
+
+By passing a number as the second argument, you can limit the number of functions that should be 
+executed at the same time.
+
+```javascript
+PFC.props(flowConfig, 2); // run at most 2 functions at the same time
+```
 
 # Errors
 
@@ -70,7 +83,7 @@ PFC
 In the following example, `a` requires `b` to be passed but `b` does not exist.
 The returned promise will be rejected with `PFC.ERRORS.NON_EXISTENT_DEPENDENCIES`.
 
-```
+```javascript
 PFC
     .props({
         a: ['b', function () {}]
@@ -86,7 +99,7 @@ In the following example, `a` requires `b` and `b` requires `a`.
 A loop like this cannot be resolved properly, so the returned promise will be 
 rejected with `PFC.ERRORS.CYCLIC_DEPENDENCIES`.
 
-```
+```javascript
 PFC
     .props({
         a: ['b', function () {}],
