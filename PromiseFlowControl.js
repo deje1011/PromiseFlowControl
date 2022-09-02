@@ -3,13 +3,11 @@
 var Promise = require('bluebird');
 var _ = require('lodash');
 
-var PFCError = function (error, data) {
-    return {
-        code: error.code,
-        name: 'PFC Error: ' + error.name,
-        message: error.message || error.name,
-        data: data
-    };
+var PFCError = function (errorTemplate, data) {
+    var error = new Error('PFC Error: ' + errorTemplate.name + ' (' + _.toString(data) + ')');
+    error.code = errorTemplate.code;
+    error.data = data;
+    return error;
 };  
 
 var PFC = {
@@ -18,12 +16,10 @@ var PFC = {
         NON_EXISTENT_DEPENDENCIES: {
             code: 0,
             name: 'Non existent dependencies',
-            message: ''
         },
         CYCLIC_DEPENDENCIES: {
             code: 1,
             name: 'Cyclic dependencies',
-            message: ''
         }
     },
 
